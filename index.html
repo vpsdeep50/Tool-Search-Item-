@@ -2,142 +2,182 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tool NRO - Danh Sách Đồ Ngon</title>
+    <title>Tool NRO Search Item And Option - Auto</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root { --main: #00ff88; --bg: #0d0d0d; --card: #1a1a1a; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 10px; }
-        .container { max-width: 500px; margin: auto; }
-        .panel { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 10px; }
-        h2 { color: var(--main); text-align: center; font-size: 16px; margin: 0 0 10px 0; text-transform: uppercase; }
-        input, select { width: 100%; padding: 12px; background: #222; color: #fff; border: 1px solid #444; border-radius: 8px; margin-bottom: 8px; box-sizing: border-box; font-size: 14px; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .btn-add { background: var(--main); color: #000; margin-bottom: 8px; }
-        .btn-copy { background: #2980b9; color: #fff; width: 100%; }
-        #log { background: #000; color: #00ff41; padding: 10px; height: 200px; overflow-y: auto; font-family: 'Consolas', monospace; border-radius: 8px; white-space: pre-wrap; font-size: 12px; border: 1px solid #222; margin-top: 10px; }
-        label { font-size: 11px; color: #888; display: block; margin-bottom: 4px; font-weight: bold; }
-        .opt-row { display: grid; grid-template-columns: 2fr 1fr; gap: 5px; margin-bottom: 5px; }
-        optgroup { background: #1a1a1a; color: var(--main); }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; }
+        .wrapper { max-width: 1400px; margin: auto; display: grid; grid-template-columns: 450px 1fr; gap: 20px; }
+        .panel { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #333; }
+        input, select { width: 100%; padding: 10px; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px; margin-bottom: 8px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 5px; }
+        .btn-add { background: var(--main); color: #000; }
+        #log { background: #000; color: #00ff41; padding: 15px; height: 550px; overflow-y: auto; font-family: 'Consolas', monospace; border-radius: 6px; white-space: pre-wrap; border: 1px solid #222; }
+        .opt-row { display: grid; grid-template-columns: 2.5fr 1fr; gap: 5px; margin-bottom: 5px; }
+        label { font-size: 11px; color: #888; text-transform: uppercase; display: block; margin-top: 10px; }
+        .loading-status { color: var(--main); font-size: 13px; margin-bottom: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="wrapper">
     <div class="panel">
-        <h2>NRO TOOL MOBILE (FULL ĐỒ)</h2>
+        <h2 style="color: var(--main); text-align: center; margin: 0 0 15px 0; font-size: 20px;">TOOL SEARCH ITEM OPTION</h2>
         
-        <label>🔍 TÌM KIẾM ĐỒ (Tên/ID):</label>
-        <input type="text" id="searchItem" placeholder="Nhập: Thần linh, Hủy diệt, Cải trang..." oninput="filterItems()">
-        <select id="itemList" size="8" style="height: 180px;"></select>
+        <div id="status" class="loading-status">⏳ Đang tự động nạp dữ liệu từ GitHub...</div>
 
-        <label>👕 CHỌN SET CLOTHES (Kích Set):</label>
-        <select id="clothesId">
-            <optgroup label="TRÁI ĐẤT">
-                <option value="139">Set TenShinhan (139)</option>
-                <option value="140">Set Genki (140)</option>
-                <option value="141">Set Kamejoko (141)</option>
-            </optgroup>
-            <optgroup label="NAMẾC">
-                <option value="142">Set Picolo KI (142)</option>
-                <option value="143">Set Liên Hoàn(143)</option>
-                <option value="144">Set Đẻ Trứng (144)</option>
-            </optgroup>
-            <optgroup label="XAYDA">
-                <option value="136">Set Galick(136)</option>
-                <option value="137">Set Hóa Khỉ (137)</option>
-                <option value="138">Set Nappa (138)</option>
-            </optgroup>
-        </select>
+        <div id="mainUI" style="display:none">
+            <label>🔍 Tìm kiếm trang bị:</label>
+            <input type="text" id="searchItem" placeholder="Gõ tên đồ..." oninput="filterItems()">
+            <select id="itemList" size="6" style="height: 120px;"></select>
 
-        <label>⚙️ CHỈ SỐ (Mặc định 100%):</label>
-        <div id="optionContainer"></div>
-        
-        <button class="btn btn-add" onclick="generate()">XUẤT LỆNH</button>
-        <button class="btn btn-copy" onclick="copyLog()">COPY TOÀN BỘ</button>
+            <label>👕 Chọn Set Clothes (Dữ liệu từ Option):</label>
+            <select id="clothesId"></select>
+
+            <label>⚙️ Chỉ số Option:</label>
+            <div id="optionContainer"></div>
+            <button class="btn" style="background: #333; color: #ccc; font-size: 10px;" onclick="addOptionRow()">+ Thêm Option</button>
+            
+            <button class="btn btn-add" style="margin-top: 15px;" onclick="generate()">TẠO LỆNH</button>
+            <button class="btn" style="background: #2980b9; color: #fff;" onclick="copyLog()">COPY TOÀN BỘ</button>
+        </div>
     </div>
 
-    <div class="panel" style="padding: 10px;">
-        <label>KẾT QUẢ COMMAND:</label>
-        <div id="log">Chưa có lệnh...</div>
-        <button onclick="document.getElementById('log').innerText=''" style="margin-top:5px; background:none; border:none; color:red; font-size:11px; width:100%; text-align:right;">Xóa trắng</button>
+    <div class="panel">
+        <h3 style="margin:0; color: var(--main); font-size: 14px;">DANH SÁCH LỆNH</h3>
+        <hr style="border:0; border-top:1px solid #333; margin: 10px 0;">
+        <div id="log">Đang tải dữ liệu, vui lòng đợi...</div>
     </div>
 </div>
 
 <script>
-    // TẬP HỢP ĐỒ CẦN THIẾT NHẤT TỪ FILE CỦA ÔNG
-    const items = [
-        // --- ĐỒ TRẮNG ---
-        {id:0, n:"Áo vải 3 lỗ"}, {id:6, n:"Quần vải đen"}, {id:21, n:"Găng tay vải"}, {id:27, n:"Giày vải"},
-        {id:1, n:"Áo sợi len"}, {id:7, n:"Quần sợi len"}, {id:22, n:"Găng thun Namếc"}, {id:28, n:"Giày thun Namếc"},
-        {id:2, n:"Áo vải thô"}, {id:8, n:"Quần vải thô"}, {id:23, n:"Găng vải thô Xayda"}, {id:29, n:"Giày vải thô Xayda"},
+    let dbItem = [];
+    let dbOpt = [];
 
-        // --- ĐỒ THẦN LINH ---
-        {id:555, n:"Áo Thần Linh TĐ"}, {id:556, n:"Quần Thần Linh TĐ"}, {id:557, n:"Găng Thần Linh TĐ"}, {id:558, n:"Giày Thần Linh TĐ"},
-        {id:560, n:"Áo Thần Linh NM"}, {id:561, n:"Quần Thần Linh NM"}, {id:562, n:"Găng Thần Linh NM"}, {id:563, n:"Giày Thần Linh NM"},
-        {id:564, n:"Áo Thần Linh XD"}, {id:565, n:"Quần Thần Linh XD"}, {id:566, n:"Găng Thần Linh XD"}, {id:567, n:"Giày Thần Linh XD"},
-		{id:561, n:"Nhẫn Thần Linh"},
+    // Bộ ID chuẩn từ bản không lỗi của ông
+    const GEN_DATA = {
+        "G0 - TRÁI ĐẤT": [139, 140, 141],
+        "G1 - NAMẾC": [142, 143, 144],
+        "G2 - XAYDA": [136, 137, 138]
+    };
 
-        // --- ĐỒ HỦY DIỆT ---
-        {id:651, n:"Áo Hủy Diệt TĐ"}, {id:652, n:"Quần Hủy Diệt TĐ"}, {id:653, n:"Găng Hủy Diệt TĐ"}, {id:654, n:"Giày Hủy Diệt TĐ"},
-        {id:655, n:"Áo Hủy Diệt NM"}, {id:656, n:"Quần Hủy Diệt NM"}, {id:650, n:"Găng Hủy Diệt NM"}, {id:649, n:"Giày Hủy Diệt NM"},
-        {id:657, n:"Áo Hủy Diệt XD"}, {id:658, n:"Quần Hủy Diệt XD"}, {id:659, n:"Găng Hủy Diệt XD"}, {id:660, n:"Giày Hủy Diệt XD"},
-        {id:656, n:"Nhẫn Hủy Diệt"},
-        // --- ĐỒ THIÊN SỨ ---
-        {id:1048, n:"Áo Thiên Sứ TĐ"}, {id:1049, n:"Quần Thiên Sứ TĐ"}, {id:1050, n:"Găng Thiên Sứ TĐ"}, {id:1051, n:"Giày Thiên Sứ TĐ"},
-        {id:1052, n:"Áo Thiên Sứ NM"}, {id:1053, n:"Quần Thiên Sứ NM"}, {id:1054, n:"Găng Thiên Sứ NM"}, {id:1055, n:"Giày Thiên Sứ NM"},
-        {id:1056, n:"Áo Thiên Sứ XD"}, {id:1057, n:"Quần Thiên Sứ XD"}, {id:1058, n:"Găng Thiên Sứ XD"}, {id:1059, n:"Giày Thiên Sứ XD"},
-        {id:1060, n:"Nhẫn Thiên Sứ TD"},{id:1061, n:"Nhẫn Thiên Sứ NM"},{id:1062, n:"Nhẫn Thiên Sứ XD"},
-        // --- CẢI TRANG HOT ---
-        {id:1229, n:"CT Goku Vô Cực"}, {id:1230, n:"CT Jiren"}, {id:1231, n:"CT Broly"}, {id:2142, n:"CT Gogeta Ssj4"},
-        {id:2000, n:"CT Beerus"}, {id:2001, n:"CT Whis"}, {id:1111, n:"CT Zeno"}, {id:1112, n:"CT Grand Priest"},
-        {id:710, n:"CT Vegito"}, {id:711, n:"CT Gogeta"}, {id:543, n:"CT Black Goku"}, {id:860, n:"CT Moro"},
+    // Tự động chạy khi mở trang web
+    window.onload = function() {
+        autoLoadFiles();
+    };
 
-        // --- PHỤ KIỆN ---
-        {id:12, n:"Rada Cấp 1"}, {id:13, n:"Rada Cấp 2"}, {id:457, n:"Thỏi Vàng"}, {id:1113, n:"Túi quà đặc biệt"}
-    ];
+    function autoLoadFiles() {
+        // Tải file item.csv
+        Papa.parse("item.csv", {
+            download: true, header: true, skipEmptyLines: true,
+            complete: function(res) {
+                dbItem = res.data.map(i => ({
+                    id: getVal(i, ['id', 'ID']),
+                    name: getVal(i, ['name', 'NAME']),
+                    g: getVal(i, ['gender', 'Gender'])
+                })).filter(i => i.id !== null);
+                checkReady();
+            }
+        });
 
-    const options = [
-        {id:50, n:"Sức đánh +#%"}, {id:77, n:"HP +#%"}, {id:103, n:"KI +#%"},
-        {id:14, n:"Chí mạng +#%"}, {id:108, n:"Né đòn +#%"},{id:101, n:"TNSM+#%"},{id:95, n:"Hút%HP"},{id:96, n:"Hút%KI"}, {id:19, n:"Tấn công quái +#%"}
-    ];
+        // Tải file option.csv
+        Papa.parse("option.csv", {
+            download: true, header: true, skipEmptyLines: true,
+            complete: function(res) {
+                dbOpt = res.data.map(i => ({
+                    id: getVal(i, ['id', 'ID']),
+                    name: getVal(i, ['name', 'NAME'])
+                })).filter(o => o.id !== null);
+                checkReady();
+            }
+        });
+    }
+
+    function checkReady() {
+        if (dbItem.length > 0 && dbOpt.length > 0) {
+            document.getElementById('status').innerText = "✅ Dữ liệu đã sẵn sàng!";
+            document.getElementById('mainUI').style.display = 'block';
+            document.getElementById('log').innerText = "";
+            renderClothesMenu();
+            renderDefaultOptions();
+            filterItems();
+        }
+    }
+
+    function getVal(obj, keys) {
+        for (let key of keys) {
+            let foundKey = Object.keys(obj).find(k => k.toLowerCase().trim() === key.toLowerCase());
+            if (foundKey && obj[foundKey] !== undefined) return obj[foundKey].toString().replace(/"/g, '').trim();
+        }
+        return null;
+    }
+
+    function renderClothesMenu() {
+        const select = document.getElementById('clothesId');
+        select.innerHTML = "";
+        for (let gen in GEN_DATA) {
+            let group = document.createElement('optgroup');
+            group.label = gen;
+            GEN_DATA[gen].forEach(id => {
+                let optObj = dbOpt.find(o => o.id == id);
+                let name = optObj ? optObj.name : "Không rõ tên";
+                name = name.replace(/\$\((.*)\)/, '$1');
+                let opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = `${name} (ID: ${id})`;
+                group.appendChild(opt);
+            });
+            select.appendChild(group);
+        }
+    }
+
+    function renderDefaultOptions() {
+        const container = document.getElementById('optionContainer');
+        container.innerHTML = "";
+        addOptionRow(50, 100); addOptionRow(77, 100); addOptionRow(103, 100);
+    }
 
     function filterItems() {
         const key = document.getElementById('searchItem').value.toLowerCase();
         const list = document.getElementById('itemList');
         list.innerHTML = "";
-        items.filter(i => i.n.toLowerCase().includes(key) || i.id.toString().includes(key))
-             .forEach(i => {
-                let opt = document.createElement('option');
-                opt.value = i.id;
-                opt.textContent = `[ID:${i.id}] ${i.n}`;
-                list.appendChild(opt);
-             });
+        dbItem.filter(i => i.name.toLowerCase().includes(key) || i.id.includes(key))
+              .slice(0, 100).forEach(i => {
+                  let opt = document.createElement('option');
+                  opt.value = i.id;
+                  opt.textContent = `[ID:${i.id}] ${i.name} (G${i.g})`;
+                  list.appendChild(opt);
+              });
     }
 
-    function addOptionRow(dId, dVal) {
+    function addOptionRow(defaultId = 0, defaultVal = 0) {
         const container = document.getElementById('optionContainer');
         const div = document.createElement('div');
         div.className = 'opt-row';
-        let sel = `<select class="opt-id">`;
-        options.forEach(o => sel += `<option value="${o.id}" ${o.id==dId?'selected':''}>${o.n}</option>`);
-        sel += `</select>`;
-        div.innerHTML = `${sel}<input type="number" class="opt-val" value="${dVal}">`;
+        let selectHtml = `<select class="opt-id">`;
+        dbOpt.forEach(o => {
+            selectHtml += `<option value="${o.id}" ${o.id == defaultId ? 'selected' : ''}>${o.name} (ID:${o.id})</option>`;
+        });
+        selectHtml += `</select>`;
+        div.innerHTML = `${selectHtml}<input type="number" class="opt-val" value="${defaultVal}">`;
         container.appendChild(div);
     }
 
     function generate() {
         const itemBox = document.getElementById('itemList');
         if (itemBox.selectedIndex === -1) return alert("Chọn đồ đã!");
-        const cId = document.getElementById('clothesId').value;
-        const log = document.getElementById('log');
-        if(log.innerText.includes("Chưa có")) log.innerText = "";
-
-        let res = `${cId}-0`;
-        document.querySelectorAll('.opt-row').forEach(r => {
-            res += ` ${r.querySelector('.opt-id').value}-${r.querySelector('.opt-val').value}`;
+        const itemId = itemBox.value;
+        const itemName = itemBox.options[itemBox.selectedIndex].text;
+        const clothesId = document.getElementById('clothesId').value;
+        const clothesName = document.getElementById('clothesId').options[document.getElementById('clothesId').selectedIndex].text;
+        let optString = `${clothesId}-0`;
+        document.querySelectorAll('.opt-row').forEach(row => {
+            const id = row.querySelector('.opt-id').value;
+            const val = row.querySelector('.opt-val').value;
+            if(id) optString += ` ${id}-${val}`;
         });
-
-        log.innerText += `Id ${itemBox.value} (${res})\n\n`;
+        const log = document.getElementById('log');
+        log.innerText += `// ${itemName} | Kích set: ${clothesName}\nId ${itemId} (${optString})\n\n`;
         log.scrollTop = log.scrollHeight;
     }
 
@@ -145,9 +185,6 @@
         navigator.clipboard.writeText(document.getElementById('log').innerText);
         alert("Đã copy!");
     }
-
-    addOptionRow(50, 100); addOptionRow(77, 100); addOptionRow(103, 100);
-    filterItems();
 </script>
 </body>
 </html>
